@@ -12,7 +12,8 @@ import Geolocation from 'react-native-geolocation-service';
 export default class App extends React.Component {
 
     state = {
-        location: {},
+        location: null,
+        locations: [],
     };
 
     async watchPosition() {
@@ -21,11 +22,13 @@ export default class App extends React.Component {
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
             this.watchID = Geolocation.watchPosition(
                 (position) => {
-                    this.setState({location: position});
-                    console.log(this.state.location);
+                    this.setState({
+                        location: null,
+                        locations: [...this.state.locations, position.coords],
+                    });
                 }, (error) => {
                     console.log(error.code, error.message);
-                }, {enableHighAccuracy: true, distanceFilter: 1, fastestInterval: 500},
+                }, {enableHighAccuracy: true, distanceFilter: 1, fastestInterval: 1500},
             );
         }
 
@@ -41,13 +44,9 @@ export default class App extends React.Component {
 
             Geolocation.getCurrentPosition(
                 (position) => {
-                    console.log(position);
-                    this.setState({location: position});
+                    this.setState({location: position, locations: []});
                 },
-                (error) => {
-                    // See error code charts below.
-                    console.log(error.code, error.message);
-                },
+                error => console.log(error.code, error.message),
                 {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
             );
         }
@@ -69,9 +68,11 @@ export default class App extends React.Component {
     }
 
     stopObserving() {
-        Geolocation.clearWatch(this.watchID);
-        Geolocation.stopObserving();
-        this.setState({location:{}})
+        if (this.watchID != null) {
+            Geolocation.clearWatch(this.watchID);
+            Geolocation.stopObserving();
+        }
+        this.setState({location: null, locations: []});
     }
 
     render() {
@@ -91,6 +92,16 @@ export default class App extends React.Component {
             <Text style={info}>{this.state.location != null && this.state.location.coords != null ?
                 `${this.state.location.coords.latitude} ${this.state.location.coords.longitude}`
                 : ''}</Text>
+
+            {this.state.locations.map(l => console.log('map=>', l))}
+
+            {this.state.locations.length > 1 ?
+                this.state.locations
+                    .slice(Math.max(this.state.locations.length - 4, 1))
+                    .map(l => <Text
+                        style={info}
+                        key={l.longitude + l.latitude}
+                    >{l.latitude} {l.longitude}</Text>) : console.log('fsdf')}
         </View>;
     };
 }
@@ -103,7 +114,7 @@ const styles = StyleSheet.create({
         alignItems: 'center', justifyContent: 'center', flex: 1,
     },
     info: {
-        fontSize: 20, margin: 10,color:'forestgreen'
+        fontSize: 20, margin: 10, color: 'forestgreen',
     },
 
 });
