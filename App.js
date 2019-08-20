@@ -4,22 +4,25 @@ import {
     View,
     Text,
     PermissionsAndroid,
+    StyleSheet,
 } from 'react-native';
 
 import Geolocation from 'react-native-geolocation-service';
 
 export default class App extends React.Component {
 
-    state = {location: {}};
+    state = {
+        location: {},
+    };
 
     async watchPosition() {
 
         const granted = await this.getPermission();
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            Geolocation.watchPosition(
+            this.watchID = Geolocation.watchPosition(
                 (position) => {
                     this.setState({location: position});
-                    console.log(position);
+                    console.log(this.state.location);
                 }, (error) => {
                     console.log(error.code, error.message);
                 }, {enableHighAccuracy: true, distanceFilter: 1, fastestInterval: 500},
@@ -27,7 +30,6 @@ export default class App extends React.Component {
         }
 
     }
-
 
     async getLocation() {
 
@@ -40,7 +42,7 @@ export default class App extends React.Component {
             Geolocation.getCurrentPosition(
                 (position) => {
                     console.log(position);
-                    // this.setState({location: position});
+                    this.setState({location: position});
                 },
                 (error) => {
                     // See error code charts below.
@@ -62,19 +64,46 @@ export default class App extends React.Component {
     }
 
     componentDidMount() {
-        let promise = this.watchPosition();
-        promise.then(position=>this.setState({location:position}))
+        // let promise = this.watchPosition();
+        // promise.then(r => console.log(r));
+    }
+
+    stopObserving() {
+        Geolocation.clearWatch(this.watchID);
+        Geolocation.stopObserving();
+        this.setState({location:{}})
     }
 
     render() {
-        return <View style={{alignItems: 'center', justifyContent: 'center', flex: 1}}><TouchableOpacity
-            // onPress={() => this.watchPosition()}
-        >
-            <Text style={{fontSize: 18}}>Map</Text>
-            <Text>{this.state.location != null && this.state.location.coords!=null ?
+        const {button, info, container} = styles;
+
+        return <View style={container}>
+            <TouchableOpacity
+                onPress={() => this.getLocation()}>
+                <Text style={button}>Get current location</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => this.watchPosition()}>
+                <Text style={button}>Watch position</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => this.stopObserving()}>
+                <Text style={button}>Stop watching</Text>
+            </TouchableOpacity>
+            <Text style={info}>{this.state.location != null && this.state.location.coords != null ?
                 `${this.state.location.coords.latitude} ${this.state.location.coords.longitude}`
                 : ''}</Text>
-        </TouchableOpacity></View>;
-
+        </View>;
     };
 }
+
+const styles = StyleSheet.create({
+    button: {
+        padding: 10, fontSize: 18,
+    },
+    container: {
+        alignItems: 'center', justifyContent: 'center', flex: 1,
+    },
+    info: {
+        fontSize: 20, margin: 10,color:'forestgreen'
+    },
+
+});
