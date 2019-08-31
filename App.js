@@ -6,6 +6,7 @@ import {
     PermissionsAndroid,
     StyleSheet,
 } from 'react-native';
+import styles from './src/styles.js';
 
 import Geolocation from 'react-native-geolocation-service';
 
@@ -95,7 +96,7 @@ export default class App extends React.Component {
 
             {this.state.locations.map(l => console.log('map=>', l))}
 
-            {this.state.locations.length > 1 ?
+            {this.state.locations.length > 0 ?
                 this.state.locations
                     .slice(Math.max(this.state.locations.length - 4, 1))
                     .map(l => <Text
@@ -106,15 +107,4 @@ export default class App extends React.Component {
     };
 }
 
-const styles = StyleSheet.create({
-    button: {
-        padding: 10, fontSize: 18,
-    },
-    container: {
-        alignItems: 'center', justifyContent: 'center', flex: 1,
-    },
-    info: {
-        fontSize: 20, margin: 10, color: 'forestgreen',
-    },
 
-});
